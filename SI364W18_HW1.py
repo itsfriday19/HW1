@@ -11,7 +11,10 @@
 ## [PROBLEM 1] - 150 points
 ## Below is code for one of the simplest possible Flask applications. Edit the code so that once you run this application locally and go to the URL 'http://localhost:5000/class', you see a page that says "Welcome to SI 364!"
 
-from flask import Flask
+from flask import Flask, request
+import requests
+import json
+
 app = Flask(__name__)
 app.debug = True
 
@@ -19,9 +22,103 @@ app.debug = True
 def hello_to_you():
     return 'Hello!'
 
+@app.route('/class')
+def welcome():
+    return "Welcome to SI 364!"
+
+@app.route('/movie/<moviename>')
+def movie(moviename):
+    baseurl = 'https://itunes.apple.com/search?'
+    params = {"term": moviename, 'media':'movie', 'limit': '1'}
+    r = requests.get(baseurl, params = params)
+    return r.text
+
+@app.route('/question')
+def question():
+    q = """<!DOCTYPE html>
+<html>
+<body>
+
+<form action="http://localhost:5000/double" method='POST'>
+Enter your favorite number:<br>
+<input type="text" name="number"><br>
+<input type="submit" value="Submit">
+</form>
+
+</body>
+</html>"""
+    return q
+
+@app.route('/double', methods=['POST'])
+def double():
+    d = int(request.form["number"])
+    try:
+        return "Double your favorite number is {}".format(d*2)
+    except:
+        return "Something got fucked"
+
+@app.route('/problem4form', methods=['GET','POST'])
+def problem4():
+    formstring = """<!DOCTYPE html>
+    <html>
+    <body>
+    <form method='POST'>
+    Type in a movie:<br>
+    <input type="text" name="movie"><br><br>
+
+    Rate the movie out of 10:<br>
+    <input type="checkbox" name="userrating" value:"1"> 1<br>
+    <input type="checkbox" name="userrating" value:"2"> 2<br>
+    <input type="checkbox" name="userrating" value:"3"> 3<br>
+    <input type="checkbox" name="userrating" value:"4"> 4<br>
+    <input type="checkbox" name="userrating" value:"5"> 5<br>
+    <input type="checkbox" name="userrating" value:"6"> 6<br>
+    <input type="checkbox" name="userrating" value:"7"> 7<br>
+    <input type="checkbox" name="userrating" value:"8"> 8<br>
+    <input type="checkbox" name="userrating" value:"9"> 9<br>
+    <input type="checkbox" name="userrating" value:"10"> 10<br>
+
+    <br>
+
+    Click submit to find out its rating on IMDb!<br>
+    <input type="submit" value="Submit">
+    </form>
+    </body>
+    </html>"""
+
+    if request.method == 'POST':
+        movie = request.form.get('movie', "")
+        baseurl = "http://www.omdbapi.com/?apikey=b95d25d9&"
+        params = {"t": request.form['movie'], "type": "movie", "plot": "full", "r": "json"}
+        r = requests.get(baseurl, params = params)
+        data = json.loads(r.text)
+
+        print ("<br>Your rating is " + request.form.get('userrating') + ". " + "The IMDb rating is  " + data["imdbRating"] + "<br><br>" + formstring)
+
+        print (request.form["userrating"])
+
+        return "<br>The IMDb rating for " + request.form.get('movie') + " is  " + data["imdbRating"] + ".<br><br>" + formstring
+    else:
+        return formstring
+
+
 
 if __name__ == '__main__':
-    app.run()
+    app.run(use_reloader=True, debug=True)
+
+# @app.route('/seeform', methods=['GET','POST'])
+# def see_form():
+#   formstring = """<br><br>
+#   <form action="http://localhost:5000/seeform" method='POST'>
+#   Enter a phrase: <br>
+#   <input type="text" name="phrase">
+#   <input type="submit" value="Submit">"""
+
+#   if request.method == 'POST':
+#       entered = request.form.get('phrase', "")
+#       return "The last phrase entered was {}".format(entered) + formstring
+#   else:
+#       return formstring
 
 
 ## [PROBLEM 2] - 250 points
