@@ -55,7 +55,7 @@ def double():
     try:
         return "Double your favorite number is {}".format(d*2)
     except:
-        return "Something got fucked"
+        return "Something went wrong"
 
 @app.route('/problem4form', methods=['GET','POST'])
 def problem4():
